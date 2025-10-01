@@ -13,7 +13,7 @@ class Document extends Model
 
     protected $fillable = [
         'demande_id',
-        'nom',
+        'titre',
         'path',
         'user_id'
     ];

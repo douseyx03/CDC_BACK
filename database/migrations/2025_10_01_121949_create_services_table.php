@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('services', function (Blueprint $table) {
             $table->id();
+            $table->string('nom');
+            $table->text('description');
+            $table->json('avantage');
+            $table->string('delai');
+            $table->decimal('montant_min', 10, 2);
+            $table->json('document_requis');
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }

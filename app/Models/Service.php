@@ -10,7 +10,7 @@ class Service extends Model
 {
     /** @use HasFactory<\Database\Factories\ServiceFactory> */
     use HasFactory;
-    
+
     protected $fillable = [
         'nom',
         'description',
@@ -19,6 +19,10 @@ class Service extends Model
         'montant_min',
         'document_requis',
         'user_id'
+    ];
+    protected $casts = [
+        'avantage' => 'array',
+        'document_requis' => 'array',
     ];
 
     public function demandes(): HasMany
