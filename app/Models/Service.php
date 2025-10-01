@@ -10,6 +10,16 @@ class Service extends Model
 {
     /** @use HasFactory<\Database\Factories\ServiceFactory> */
     use HasFactory;
+    
+    protected $fillable = [
+        'nom',
+        'description',
+        'avantage',
+        'delai',
+        'montant_min',
+        'document_requis',
+        'user_id'
+    ];
 
     public function demandes(): HasMany
     {

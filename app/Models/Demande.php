@@ -11,6 +11,15 @@ class Demande extends Model
 {
     /** @use HasFactory<\Database\Factories\DemandeFactory> */
     use HasFactory;
+    
+    protected $fillable = [
+        'type_demande',
+        'description',
+        'urgent',
+        'statut',
+        'user_id',
+        'service_id'
+    ];
 
     public function user(): BelongsTo
     {

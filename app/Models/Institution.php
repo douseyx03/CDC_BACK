@@ -12,6 +12,11 @@ class Institution extends Model
     /** @use HasFactory<\Database\Factories\InstitutionFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'user_id',
+        'nom_institution',
+        'type_institution'
+    ];
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');

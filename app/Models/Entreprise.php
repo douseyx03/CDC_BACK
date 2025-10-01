@@ -12,6 +12,11 @@ class Entreprise extends Model
     /** @use HasFactory<\Database\Factories\EntrepriseFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'user_id',
+        'nom_entreprise',
+        'type_entreprise'
+    ];      
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');

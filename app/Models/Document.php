@@ -11,6 +11,12 @@ class Document extends Model
     /** @use HasFactory<\Database\Factories\DocumentFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'demande_id',
+        'nom',
+        'path',
+        'user_id'
+    ];
     public function demande(): BelongsTo
     {
         return $this->belongsTo(Demande::class, 'demande_id');
