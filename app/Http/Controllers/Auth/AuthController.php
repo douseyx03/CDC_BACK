@@ -6,12 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\VerifyPhoneRequest;
+use App\Models\Entreprise;
+use App\Models\Institution;
+use App\Models\Particulier;
 use App\Models\User;
 use App\Services\Otp\OtpSender;
 use App\Services\Otp\OtpDeliveryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Throwable;
@@ -27,20 +31,41 @@ class AuthController extends Controller
         try {
             $data = $request->validated();
 
-            $user = User::create([
-                'nom' => $data['nom'],
-                'prenom' => $data['prenom'],
-                'email' => $data['email'],
-                'telephone' => $data['telephone'],
-                'password' => Hash::make($data['password']),
-            ]);
+            $user = DB::transaction(function () use ($data) {
+                $user = User::create([
+                    'nom' => $data['nom'],
+                    'prenom' => $data['prenom'],
+                    'email' => $data['email'],
+                    'telephone' => $data['telephone'],
+                    'password' => Hash::make($data['password']),
+                ]);
+
+                match ($data['type_utilisateur']) {
+                    'particulier' => Particulier::create(['user_id' => $user->id]),
+                    'entreprise' => Entreprise::create([
+                        'user_id' => $user->id,
+                        'nom_entreprise' => $data['nom_entreprise'],
+                        'type_entreprise' => $data['type_entreprise'],
+                    ]),
+                    'institution' => Institution::create([
+                        'user_id' => $user->id,
+                        'nom_institution' => $data['nom_institution'],
+                        'type_institution' => $data['type_institution'],
+                    ]),
+                };
+
+                return $user;
+            });
 
             $user->sendEmailVerificationNotification();
+            $user = $user->fresh();
+            $userRepresentation = $this->buildUserPayload($user);
 
             return response()->json([
                 'message' => 'Utilisateur enregistré. Consultez votre e-mail pour valider votre mot de passe via le lien magique.',
                 'requires_email_verification' => !$user->hasVerifiedEmail(),
                 'requires_phone_verification' => $user->phone_verified_at === null,
+                'user' => $userRepresentation,
                 'verification_url_preview' => app()->isLocal() ? $this->verificationUrl($user) : null,
             ], 201);
         } catch (Throwable $th) {
@@ -91,29 +116,19 @@ class AuthController extends Controller
             //     return response()->json([
             //         'message' => 'Code OTP envoyé. Veuillez vérifier votre téléphone pour finaliser la connexion.',
             //         'requires_phone_verification' => true,
-            //         'user' => [
-            //             'email' => $user->email,
-            //             'telephone' => $user->telephone,
-            //         ],
+            //         'user' => $this->buildUserPayload($user),
             //         'otp_preview' => app()->isLocal() ? $otp : null,
             //     ], 202);
             // }
 
             $token = $user->createToken($credentials['device_name'] ?? 'api-token');
+            $user = $user->fresh();
 
             return response()->json([
                 'token' => $token->plainTextToken,
                 'token_type' => 'Bearer',
                 'requires_phone_verification' => false,
-                'user' => [
-                    'id' => $user->id,
-                    'nom' => $user->nom,
-                    'prenom' => $user->prenom,
-                    'email' => $user->email,
-                    'telephone' => $user->telephone,
-                    'email_verified' => $user->hasVerifiedEmail(),
-                    'phone_verified' => true,
-                ],
+                'user' => $this->buildUserPayload($user),
             ]);
         } catch (Throwable $th) {
             return response()->json([
@@ -193,19 +208,13 @@ class AuthController extends Controller
                     $tokenType = 'Bearer';
                 }
 
+                $user = $user->fresh();
+
                 return response()->json(array_filter([
                     'message' => 'Le numéro de téléphone est déjà vérifié.',
                     'token' => $plainToken,
                     'token_type' => $tokenType,
-                    'user' => [
-                        'id' => $user->id,
-                        'nom' => $user->nom,
-                        'prenom' => $user->prenom,
-                        'email' => $user->email,
-                        'telephone' => $user->telephone,
-                        'email_verified' => $user->hasVerifiedEmail(),
-                        'phone_verified' => true,
-                    ],
+                    'user' => $this->buildUserPayload($user),
                 ], static fn ($value) => $value !== null));
             }
 
@@ -261,19 +270,13 @@ class AuthController extends Controller
                 $tokenType = 'Bearer';
             }
 
+            $user = $user->fresh();
+
             return response()->json(array_filter([
                 'message' => 'Numéro de téléphone vérifié avec succès.',
                 'token' => $plainToken,
                 'token_type' => $tokenType,
-                'user' => [
-                    'id' => $user->id,
-                    'nom' => $user->nom,
-                    'prenom' => $user->prenom,
-                    'email' => $user->email,
-                    'telephone' => $user->telephone,
-                    'email_verified' => $user->hasVerifiedEmail(),
-                    'phone_verified' => true,
-                ],
+                'user' => $this->buildUserPayload($user),
             ], static fn ($value) => $value !== null));
         } catch (Throwable $th) {
             return response()->json([
@@ -303,6 +306,48 @@ class AuthController extends Controller
                 'error' => app()->isLocal() ? $th->getMessage() : null,
             ], 500);
         }
+    }
+
+    private function buildUserPayload(User $user): array
+    {
+        $user->loadMissing('particulier', 'entreprise', 'institution');
+
+        [$type, $profile] = $this->resolveUserType($user);
+
+        return [
+            'id' => $user->id,
+            'nom' => $user->nom,
+            'prenom' => $user->prenom,
+            'email' => $user->email,
+            'telephone' => $user->telephone,
+            'email_verified' => $user->hasVerifiedEmail(),
+            'phone_verified' => $user->phone_verified_at !== null,
+            'type' => $type,
+            'profile' => $profile,
+        ];
+    }
+
+    private function resolveUserType(User $user): array
+    {
+        if ($user->particulier) {
+            return ['particulier', []];
+        }
+
+        if ($user->entreprise) {
+            return ['entreprise', [
+                'nom_entreprise' => $user->entreprise->nom_entreprise,
+                'type_entreprise' => $user->entreprise->type_entreprise,
+            ]];
+        }
+
+        if ($user->institution) {
+            return ['institution', [
+                'nom_institution' => $user->institution->nom_institution,
+                'type_institution' => $user->institution->type_institution,
+            ]];
+        }
+
+        return [null, null];
     }
 
     private function generatePhoneVerificationCode(User $user): string

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('institutions', function (Blueprint $table) {
             $table->id();
             $table->string('nom_institution');
-            $table->string('type_institution');
+            $table->enum('type_institution',['banque','assurance','microfinace','institution_gouvernementale']);
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
             $table->timestamps();
         });

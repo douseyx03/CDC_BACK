@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('entreprises', function (Blueprint $table) {
             $table->id();
             $table->string('nom_entreprise');
-            $table->string('type_entreprise');
+            $table->enum('type_entreprise',['pme','grande_entreprise','startup','cooperative']);
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
