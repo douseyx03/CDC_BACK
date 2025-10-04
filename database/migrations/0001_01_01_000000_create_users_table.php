@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('telephone')->unique();
             $table->string('password');
             $table->rememberToken();
+            $table->timestamp('phone_verified_at')->nullable();
             $table->timestamps();
         });
 

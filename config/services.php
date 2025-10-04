@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+
+    'axiomtext' => [
+        'base_url' => env('AXIOMTEXT_BASE_URL', 'https://api.axiomtext.com'),
+        'api_key' => env('AXIOMTEXT_API_KEY'),
+        'sender_id' => env('AXIOMTEXT_SENDER_ID', 'CDC'),
+        'otp_endpoint' => env('AXIOMTEXT_OTP_ENDPOINT', '/api/sms/otp/send'),
+        'otp_template' => env('AXIOMTEXT_OTP_TEMPLATE', 'Votre code OTP pour CDC est : :code'),
+        'timeout' => env('AXIOMTEXT_TIMEOUT', 10),
+    ],
+
 ];
+
