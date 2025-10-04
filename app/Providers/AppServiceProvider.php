@@ -2,9 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Service;
+use App\Policies\ServicePolicy;
 use App\Services\Otp\AxiomTextOtpSender;
 use App\Services\Otp\OtpSender;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Gate;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,6 +24,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Gate::policy(Service::class, ServicePolicy::class);
     }
 }

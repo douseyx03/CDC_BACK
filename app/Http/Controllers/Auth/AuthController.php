@@ -71,7 +71,7 @@ class AuthController extends Controller
         } catch (Throwable $th) {
             return response()->json([
                 'message' => "Erreur lors de l'enregistrement de l'utilisateur.",
-                'error' => app()->isLocal() ? $th->getMessage() : null,
+                'error' => config('app.debug') ? $th->getMessage() : null,
             ], 500);
         }
     }
@@ -133,7 +133,7 @@ class AuthController extends Controller
         } catch (Throwable $th) {
             return response()->json([
                 'message' => 'Erreur lors de la connexion.',
-                'error' => app()->isLocal() ? $th->getMessage() : null,
+                'error' => config('app.debug') ? $th->getMessage() : null,
             ], 500);
         }
     }

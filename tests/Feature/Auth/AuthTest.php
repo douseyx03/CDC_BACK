@@ -64,7 +64,7 @@ class AuthTest extends TestCase
             'password_confirmation' => 'password123',
             'type_utilisateur' => 'entreprise',
             'nom_entreprise' => 'ACME Corp',
-            'type_entreprise' => 'SARL',
+            'type_entreprise' => 'startup',
         ]);
 
         $response->assertCreated();
@@ -73,11 +73,11 @@ class AuthTest extends TestCase
         $this->assertNotNull($user);
         $this->assertNotNull($user->entreprise);
         $this->assertSame('ACME Corp', $user->entreprise->nom_entreprise);
-        $this->assertSame('SARL', $user->entreprise->type_entreprise);
+        $this->assertSame('startup', $user->entreprise->type_entreprise);
 
         $response->assertJsonPath('user.type', 'entreprise');
         $response->assertJsonPath('user.profile.nom_entreprise', 'ACME Corp');
-        $response->assertJsonPath('user.profile.type_entreprise', 'SARL');
+        $response->assertJsonPath('user.profile.type_entreprise', 'startup');
         Http::assertNothingSent();
     }
 
@@ -95,7 +95,7 @@ class AuthTest extends TestCase
             'password_confirmation' => 'password123',
             'type_utilisateur' => 'institution',
             'nom_institution' => 'Ministère de la Santé',
-            'type_institution' => 'Public',
+            'type_institution' => 'institution_gouvernementale',
         ]);
 
         $response->assertCreated();
@@ -104,11 +104,11 @@ class AuthTest extends TestCase
         $this->assertNotNull($user);
         $this->assertNotNull($user->institution);
         $this->assertSame('Ministère de la Santé', $user->institution->nom_institution);
-        $this->assertSame('Public', $user->institution->type_institution);
+        $this->assertSame('institution_gouvernementale', $user->institution->type_institution);
 
         $response->assertJsonPath('user.type', 'institution');
         $response->assertJsonPath('user.profile.nom_institution', 'Ministère de la Santé');
-        $response->assertJsonPath('user.profile.type_institution', 'Public');
+        $response->assertJsonPath('user.profile.type_institution', 'institution_gouvernementale');
         Http::assertNothingSent();
     }
 
@@ -123,6 +123,7 @@ class AuthTest extends TestCase
         ]);
 
         $this->attachParticulier($user);
+        $this->assertNull($user->phone_verified_at);
 
         $response = $this->postJson('/api/auth/login', [
             'email' => $user->email,

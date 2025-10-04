@@ -21,9 +21,9 @@ class RegisterRequest extends FormRequest
             'password' => ['required', 'string', 'min:8', 'max:64', 'confirmed'],
             'type_utilisateur' => ['bail', 'required', 'string', 'in:particulier,entreprise,institution'],
             'nom_entreprise' => ['nullable', 'string', 'min:2', 'max:255'],
-            'type_entreprise' => ['nullable', 'string', 'min:2', 'max:255'],
+            'type_entreprise' => ['nullable', 'string', 'in:pme,grande_entreprise,startup,cooperative'],
             'nom_institution' => ['nullable', 'string', 'min:2', 'max:255'],
-            'type_institution' => ['nullable', 'string', 'min:2', 'max:255'],
+            'type_institution' => ['nullable', 'string', 'in:banque,assurance,microfinace,institution_gouvernementale'],
         ];
     }
 

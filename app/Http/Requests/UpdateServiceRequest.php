@@ -2,27 +2,31 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Service;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateServiceRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        $service = $this->route('service');
+
+        return $service instanceof Service
+            ? ($this->user()?->can('update', $service) ?? false)
+            : ($this->user()?->can('update', Service::class) ?? false);
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'nom' => ['sometimes', 'required', 'string', 'max:255'],
+            'description' => ['sometimes', 'required', 'string'],
+            'avantage' => ['sometimes', 'required', 'array', 'min:1'],
+            'avantage.*' => ['bail', 'string', 'min:1'],
+            'delai' => ['sometimes', 'required', 'string', 'max:255'],
+            'montant_min' => ['sometimes', 'required', 'numeric', 'min:0'],
+            'document_requis' => ['sometimes', 'required', 'array', 'min:1'],
+            'document_requis.*' => ['bail', 'string', 'min:1'],
         ];
     }
 }

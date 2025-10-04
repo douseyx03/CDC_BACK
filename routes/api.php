@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ServiceController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
@@ -17,11 +18,13 @@ Route::prefix('auth')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
-        //régénère un OTP si le numéro n’est pas encore vérifié.
         Route::post('/phone/otp', [AuthController::class, 'requestPhoneOtp']);
-        //Retourne les infos du profil associé au token.
         Route::get('/me', function (Request $request) {
             return $request->user();
         });
     });
+});
+
+Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+    Route::apiResource('services', ServiceController::class)->except(['create', 'edit']);
 });
