@@ -213,10 +213,10 @@ class AuthTest extends TestCase
             }
 
             return $request->url() === $expectedUrl
-                && $apiKey === 'testing-api-key'
-                && $apiSecret === 'testing-api-secret'
-                && $request['sender_name'] === 'CDC'
-                && $request['sms_type'] === 'normal'
+                && $apiKey === config('services.sendtext.api_key')
+                && $apiSecret === config('services.sendtext.api_secret')
+                && $request['sender_name'] === config('services.sendtext.sender_name')
+                && $request['sms_type'] === config('services.sendtext.message_type')
                 && $phone === '1234567892'
                 && is_string($message)
                 && str_contains($message, 'Votre code OTP');
@@ -338,10 +338,10 @@ class AuthTest extends TestCase
             }
 
             return $request->url() === $expectedUrl
-                && $apiKey === 'testing-api-key'
-                && $apiSecret === 'testing-api-secret'
-                && $request['sender_name'] === 'CDC'
-                && $request['sms_type'] === 'normal'
+                && $apiKey === config('services.sendtext.api_key')
+                && $apiSecret === config('services.sendtext.api_secret')
+                && $request['sender_name'] === config('services.sendtext.sender_name')
+                && $request['sms_type'] === config('services.sendtext.message_type')
                 && $phone === '1234567894';
         });
     }
