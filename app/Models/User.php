@@ -72,6 +72,49 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Demande::class, 'user_id');
     }
 
+    public function isAdmin(): bool
+    {
+        return $this->institution !== null;
+    }
+
+    public function profileType(): ?string
+    {
+        if ($this->particulier) {
+            return 'particulier';
+        }
+
+        if ($this->entreprise) {
+            return 'entreprise';
+        }
+
+        if ($this->institution) {
+            return 'institution';
+        }
+
+        return null;
+    }
+
+    public function profileTypeLabel(): ?string
+    {
+        $type = $this->profileType();
+
+        return $type ? match ($type) {
+            'particulier' => 'Particulier',
+            'entreprise' => 'Entreprise',
+            'institution' => 'Institution',
+            default => null,
+        } : null;
+    }
+
+    public function ensureProfileType(?string $type): bool
+    {
+        if ($type === null) {
+            return true;
+        }
+
+        return $this->profileType() === strtolower($type);
+    }
+
     public function phoneVerificationCode(): HasOne
     {
         return $this->hasOne(PhoneVerificationCode::class);

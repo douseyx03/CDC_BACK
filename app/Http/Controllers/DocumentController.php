@@ -4,63 +4,56 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreDocumentRequest;
 use App\Http\Requests\UpdateDocumentRequest;
+use App\Models\Demande;
 use App\Models\Document;
+use App\Services\Demande\DocumentService;
+use Illuminate\Http\JsonResponse;
 
 class DocumentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(private readonly DocumentService $documentService)
     {
-        //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function index(Demande $demande): JsonResponse
     {
-        //
+        $this->authorize('view', $demande);
+
+        return response()->json($demande->documents()->latest()->get());
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreDocumentRequest $request)
+    public function store(StoreDocumentRequest $request, Demande $demande): JsonResponse
     {
-        //
+        $document = $this->documentService->store(
+            $demande,
+            $request->file('fichier'),
+            $request->only('titre'),
+            $request->user()->id
+        );
+
+        return response()->json($document, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Document $document)
+    public function show(Document $document): JsonResponse
     {
-        //
+        $this->authorize('view', $document);
+
+        return response()->json($document);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Document $document)
+    public function update(UpdateDocumentRequest $request, Document $document): JsonResponse
     {
-        //
+        $document->update($request->validated());
+
+        return response()->json($document->fresh());
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateDocumentRequest $request, Document $document)
+    public function destroy(Document $document): JsonResponse
     {
-        //
-    }
+        $this->authorize('delete', $document);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Document $document)
-    {
-        //
+        $this->documentService->delete($document);
+
+        return response()->json(null, 204);
     }
 }

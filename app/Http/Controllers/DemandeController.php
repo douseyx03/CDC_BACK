@@ -5,62 +5,79 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreDemandeRequest;
 use App\Http\Requests\UpdateDemandeRequest;
 use App\Models\Demande;
+use App\Services\Demande\DemandeService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class DemandeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(private readonly DemandeService $demandeService)
     {
-        //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function index(Request $request): JsonResponse
     {
-        //
+        $user = $request->user();
+
+        $query = Demande::with(['documents', 'service']);
+
+        if ($user->isAdmin()) {
+            if ($type = $request->query('type')) {
+                $query->where('type_demande', $this->formatType($type));
+            }
+
+            if ($status = $request->query('status')) {
+                $query->where('status', $status);
+            }
+        } else {
+            $query->where('user_id', $user->id);
+        }
+
+        $demandes = $query
+            ->latest()
+            ->paginate($request->integer('per_page', 15));
+
+        return response()->json($demandes);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreDemandeRequest $request)
+    public function store(StoreDemandeRequest $request): JsonResponse
     {
-        //
+        $demande = $this->demandeService->create($request->user(), $request->validated());
+
+        return response()->json($demande, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Demande $demande)
+    public function show(Demande $demande): JsonResponse
     {
-        //
+        $this->authorize('view', $demande);
+
+        return response()->json($demande->load(['documents', 'service']));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Demande $demande)
+    public function update(UpdateDemandeRequest $request, Demande $demande): JsonResponse
     {
-        //
+        $demande = $this->demandeService->update($demande, $request->validated(), $request->user());
+
+        return response()->json($demande);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateDemandeRequest $request, Demande $demande)
+    public function destroy(Demande $demande): JsonResponse
     {
-        //
+        $this->authorize('delete', $demande);
+
+        $demande->delete();
+
+        return response()->json(null, 204);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Demande $demande)
+    private function formatType(string $type): string
     {
-        //
+        return match (strtolower($type)) {
+            'particulier' => 'Particulier',
+            'entreprise' => 'Entreprise',
+            'institution' => 'Institution',
+            default => Str::title($type),
+        };
     }
 }

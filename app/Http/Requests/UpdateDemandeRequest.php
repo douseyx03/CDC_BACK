@@ -2,27 +2,40 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Demande;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateDemandeRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        $demande = $this->route('demande');
+
+        return $demande instanceof Demande
+            ? ($this->user()?->can('update', $demande) ?? false)
+            : false;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'description' => ['sometimes', 'required', 'string'],
+            'urgent' => ['sometimes', 'required', 'boolean'],
+            'status' => ['sometimes', 'required', 'string', Rule::in([
+                'soumission',
+                'verification document',
+                'validation interne',
+                'accepter',
+                'refuser',
+                'annuler',
+            ])],
+            'documents' => ['sometimes', 'array', 'min:1'],
+            'documents.*' => ['file', 'max:5120'],
+            'documents_meta' => ['sometimes', 'array'],
+            'documents_meta.*.titre' => ['nullable', 'string', 'max:255'],
+            'documents_to_remove' => ['sometimes', 'array'],
+            'documents_to_remove.*' => ['integer', 'exists:documents,id'],
         ];
     }
 }

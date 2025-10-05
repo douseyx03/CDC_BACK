@@ -16,9 +16,13 @@ class Demande extends Model
         'type_demande',
         'description',
         'urgent',
-        'statut',
+        'status',
         'user_id',
         'service_id'
+    ];
+
+    protected $casts = [
+        'urgent' => 'boolean',
     ];
 
     public function user(): BelongsTo
