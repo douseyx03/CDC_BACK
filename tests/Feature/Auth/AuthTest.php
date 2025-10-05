@@ -172,7 +172,7 @@ class AuthTest extends TestCase
     public function test_user_must_verify_phone_before_token_is_issued(): void
     {
         Http::fake([
-            rtrim(config('services.axiomtext.base_url'), '/').'/*' => Http::response(['status' => 'ok']),
+            rtrim(config('services.sendtext.base_url'), '/').'/*' => Http::response(['status' => 'ok']),
         ]);
 
         $user = User::factory()->create([
@@ -200,12 +200,24 @@ class AuthTest extends TestCase
 
         Http::assertSentCount(1);
         Http::assertSent(function ($request) use ($user) {
-            $expectedUrl = rtrim(config('services.axiomtext.base_url'), '/').config('services.axiomtext.otp_endpoint');
-            $recipient = $request['recipient'] ?? $request['phone'] ?? null;
-            $message = $request['message'] ?? '';
+            $expectedUrl = rtrim(config('services.sendtext.base_url'), '/').config('services.sendtext.otp_endpoint');
+            $phone = $request['phone'] ?? null;
+            $message = $request['text'] ?? '';
+            $apiKey = $request->header('SNT-API-KEY');
+            if (is_array($apiKey)) {
+                $apiKey = $apiKey[0] ?? null;
+            }
+            $apiSecret = $request->header('SNT-API-SECRET');
+            if (is_array($apiSecret)) {
+                $apiSecret = $apiSecret[0] ?? null;
+            }
 
             return $request->url() === $expectedUrl
-                && $recipient === $user->telephone
+                && $apiKey === 'testing-api-key'
+                && $apiSecret === 'testing-api-secret'
+                && $request['sender_name'] === 'CDC'
+                && $request['sms_type'] === 'normal'
+                && $phone === '1234567892'
                 && is_string($message)
                 && str_contains($message, 'Votre code OTP');
         });
@@ -294,7 +306,7 @@ class AuthTest extends TestCase
     public function test_user_can_request_new_phone_otp(): void
     {
         Http::fake([
-            rtrim(config('services.axiomtext.base_url'), '/').'/*' => Http::response(['status' => 'ok']),
+            rtrim(config('services.sendtext.base_url'), '/').'/*' => Http::response(['status' => 'ok']),
         ]);
 
         $user = User::factory()->create([
@@ -314,11 +326,23 @@ class AuthTest extends TestCase
 
         Http::assertSentCount(1);
         Http::assertSent(function ($request) use ($user) {
-            $expectedUrl = rtrim(config('services.axiomtext.base_url'), '/').config('services.axiomtext.otp_endpoint');
-            $recipient = $request['recipient'] ?? $request['phone'] ?? null;
+            $expectedUrl = rtrim(config('services.sendtext.base_url'), '/').config('services.sendtext.otp_endpoint');
+            $phone = $request['phone'] ?? null;
+            $apiKey = $request->header('SNT-API-KEY');
+            if (is_array($apiKey)) {
+                $apiKey = $apiKey[0] ?? null;
+            }
+            $apiSecret = $request->header('SNT-API-SECRET');
+            if (is_array($apiSecret)) {
+                $apiSecret = $apiSecret[0] ?? null;
+            }
 
             return $request->url() === $expectedUrl
-                && $recipient === $user->telephone;
+                && $apiKey === 'testing-api-key'
+                && $apiSecret === 'testing-api-secret'
+                && $request['sender_name'] === 'CDC'
+                && $request['sms_type'] === 'normal'
+                && $phone === '1234567894';
         });
     }
 

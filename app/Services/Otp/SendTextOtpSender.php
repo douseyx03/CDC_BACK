@@ -8,24 +8,26 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-class AxiomTextOtpSender implements OtpSender
+class SendTextOtpSender implements OtpSender
 {
     public function send(string $phoneNumber, string $code, array $context = []): void
     {
-        $config = config('services.axiomtext', []);
+        $config = config('services.sendtext', []);
         $apiKey = $config['api_key'] ?? null;
+        $apiSecret = $config['api_secret'] ?? null;
 
-        if (empty($apiKey)) {
-            throw new OtpDeliveryException('Clé API AxiomText manquante.');
+        if (empty($apiKey) || empty($apiSecret)) {
+            throw new OtpDeliveryException('Clés API SendText manquantes.');
         }
 
-        $baseUrl = rtrim($config['base_url'] ?? 'https://api.axiomtext.com', '/');
-        $endpoint = $config['otp_endpoint'] ?? '/api/sms/otp/send';
+        $baseUrl = rtrim($config['base_url'] ?? 'https://api.sendtext.sn', '/');
+        $endpoint = $config['otp_endpoint'] ?? '/v1/sms';
         $timeout = (int) ($config['timeout'] ?? 10);
         $url = $baseUrl.$endpoint;
 
-        $senderId = $config['sender_id'] ?? 'OTP';
+        $senderName = $config['sender_name'] ?? null;
         $messageTemplate = $config['otp_template'] ?? 'Votre code OTP est : :code';
+        $messageType = $config['message_type'] ?? 'normal';
 
         $name = $this->resolveRecipientName($context);
         $replacements = array_filter([
@@ -36,22 +38,23 @@ class AxiomTextOtpSender implements OtpSender
         $message = strtr($messageTemplate, $replacements);
 
         $payload = array_filter([
-            'sender_id' => $senderId,
-            'sender' => $senderId,
-            'recipient' => $phoneNumber,
-            'phone' => $phoneNumber,
-            'message' => $message,
-            'type' => 'OTP',
+            'sender_name' => $senderName,
+            'sms_type' => $messageType,
+            'phone' => $this->formatPhoneNumber($phoneNumber),
+            'text' => $message,
         ], static fn ($value) => $value !== null && $value !== '');
 
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer '.$apiKey,
-                'Accept' => 'application/json',
-            ])->timeout($timeout)->post($url, $payload);
+                'SNT-API-KEY' => $apiKey,
+                'SNT-API-SECRET' => $apiSecret,
+            ])->acceptJson()
+                ->asJson()
+                ->timeout($timeout)
+                ->post($url, $payload);
         } catch (Throwable $th) {
             throw new OtpDeliveryException(
-                'Impossible de contacter le service SMS AxiomText.',
+                'Impossible de contacter le service SMS SendText.',
                 null,
                 null,
                 $th,
@@ -64,13 +67,13 @@ class AxiomTextOtpSender implements OtpSender
                 $body = $response->body();
             }
 
-            Log::warning('AxiomText OTP delivery failed.', [
+            Log::warning('SendText OTP delivery failed.', [
                 'status' => $response->status(),
                 'response' => $body,
             ]);
 
             throw new OtpDeliveryException(
-                'AxiomText a retourné une erreur lors de l\'envoi du code OTP.',
+                'SendText a retourné une erreur lors de l\'envoi du code OTP.',
                 $response->status(),
                 $body,
             );
@@ -91,5 +94,12 @@ class AxiomTextOtpSender implements OtpSender
         }
 
         return null;
+    }
+
+    private function formatPhoneNumber(string $phoneNumber): string
+    {
+        $digits = preg_replace('/\D+/', '', $phoneNumber);
+
+        return $digits !== null && $digits !== '' ? $digits : $phoneNumber;
     }
 }

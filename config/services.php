@@ -35,15 +35,15 @@ return [
         ],
     ],
 
-
-    'axiomtext' => [
-        'base_url' => env('AXIOMTEXT_BASE_URL', 'https://api.axiomtext.com'),
-        'api_key' => env('AXIOMTEXT_API_KEY'),
-        'sender_id' => env('AXIOMTEXT_SENDER_ID', 'CDC'),
-        'otp_endpoint' => env('AXIOMTEXT_OTP_ENDPOINT', '/api/sms/otp/send'),
-        'otp_template' => env('AXIOMTEXT_OTP_TEMPLATE', 'Votre code OTP pour CDC est : :code'),
-        'timeout' => env('AXIOMTEXT_TIMEOUT', 10),
+    'sendtext' => [
+        'base_url' => env('SENDTEXT_BASE_URL', 'https://api.sendtext.sn'),
+        'api_key' => env('SENDTEXT_API_KEY'),
+        'api_secret' => env('SENDTEXT_API_SECRET'),
+        'sender_name' => env('SENDTEXT_SENDER_NAME', 'CDC'),
+        'otp_endpoint' => env('SENDTEXT_OTP_ENDPOINT', '/v1/sms'),
+        'otp_template' => env('SENDTEXT_OTP_TEMPLATE', 'Votre code OTP pour CDC est : :code'),
+        'message_type' => env('SENDTEXT_MESSAGE_TYPE', 'normal'),
+        'timeout' => env('SENDTEXT_TIMEOUT', 10),
     ],
 
 ];
-

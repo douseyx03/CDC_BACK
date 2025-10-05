@@ -103,23 +103,23 @@ class AuthController extends Controller
                 ], 403);
             }
 
-            // if ($user->phone_verified_at === null) {
-            //     try {
-            //         $otp = $this->generatePhoneVerificationCode($user);
-            //     } catch (OtpDeliveryException $exception) {
-            //         return response()->json([
-            //             'message' => "Impossible d'envoyer le code OTP. Veuillez réessayer plus tard.",
-            //             'error' => app()->isLocal() ? $exception->getMessage() : null,
-            //         ], 502);
-            //     }
+            if ($user->phone_verified_at === null) {
+                try {
+                    $otp = $this->generatePhoneVerificationCode($user);
+                } catch (OtpDeliveryException $exception) {
+                    return response()->json([
+                        'message' => "Impossible d'envoyer le code OTP. Veuillez réessayer plus tard.",
+                        'error' => app()->isLocal() ? $exception->getMessage() : null,
+                    ], 502);
+                }
 
-            //     return response()->json([
-            //         'message' => 'Code OTP envoyé. Veuillez vérifier votre téléphone pour finaliser la connexion.',
-            //         'requires_phone_verification' => true,
-            //         'user' => $this->buildUserPayload($user),
-            //         'otp_preview' => app()->isLocal() ? $otp : null,
-            //     ], 202);
-            // }
+                return response()->json([
+                    'message' => 'Code OTP envoyé. Veuillez vérifier votre téléphone pour finaliser la connexion.',
+                    'requires_phone_verification' => true,
+                    'user' => $this->buildUserPayload($user),
+                    'otp_preview' => app()->isLocal() ? $otp : null,
+                ], 202);
+            }
 
             $token = $user->createToken($credentials['device_name'] ?? 'api-token');
             $user = $user->fresh();

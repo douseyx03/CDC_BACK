@@ -30,6 +30,7 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
-        <env name="AXIOMTEXT_API_KEY" value="testing-api-key"/>
+        <env name="SENDTEXT_API_KEY" value="testing-api-key"/>
+        <env name="SENDTEXT_API_SECRET" value="testing-api-secret"/>
     </php>
 </phpunit>

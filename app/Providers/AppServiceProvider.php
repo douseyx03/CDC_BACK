@@ -8,7 +8,7 @@ use App\Models\Demande;
 use App\Policies\DemandePolicy;
 use App\Models\Document;
 use App\Policies\DocumentPolicy;
-use App\Services\Otp\AxiomTextOtpSender;
+use App\Services\Otp\SendTextOtpSender;
 use App\Services\Otp\OtpSender;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
@@ -20,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(OtpSender::class, AxiomTextOtpSender::class);
+        $this->app->bind(OtpSender::class, SendTextOtpSender::class);
     }
 
     /**
