@@ -72,6 +72,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Demande::class, 'user_id');
     }
 
+    public function agent(): HasOne
+    {
+        return $this->hasOne(Agent::class, 'user_id');
+    }
+
     public function isAdmin(): bool
     {
         return $this->institution !== null;
