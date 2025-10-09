@@ -28,4 +28,23 @@ class UpdateServiceRequest extends ApiFormRequest
             'document_requis.*' => ['bail', 'string', 'min:1'],
         ];
     }
+
+    protected function prepareForValidation(): void
+    {
+        foreach (['avantage', 'document_requis'] as $field) {
+            if (!$this->has($field)) {
+                continue;
+            }
+
+            $value = $this->input($field);
+
+            if (is_string($value)) {
+                $decoded = json_decode($value, true);
+
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $this->merge([$field => $decoded]);
+                }
+            }
+        }
+    }
 }
