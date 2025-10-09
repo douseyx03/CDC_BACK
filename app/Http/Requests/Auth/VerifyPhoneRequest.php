@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Auth;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\ApiFormRequest;
 
-class VerifyPhoneRequest extends FormRequest
+class VerifyPhoneRequest extends ApiFormRequest
 {
     public function authorize(): bool
     {

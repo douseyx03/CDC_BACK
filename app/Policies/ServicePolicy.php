@@ -9,12 +9,12 @@ class ServicePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $this->isAdmin($user);
+        return true;
     }
 
     public function view(User $user, Service $service): bool
     {
-        return $this->isAdmin($user);
+        return true;
     }
 
     public function create(User $user): bool

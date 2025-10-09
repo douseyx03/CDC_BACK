@@ -3,9 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Models\Service;
-use Illuminate\Foundation\Http\FormRequest;
 
-class StoreServiceRequest extends FormRequest
+class StoreServiceRequest extends ApiFormRequest
 {
     public function authorize(): bool
     {

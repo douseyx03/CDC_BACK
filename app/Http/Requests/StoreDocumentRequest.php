@@ -4,9 +4,8 @@ namespace App\Http\Requests;
 
 use App\Models\Demande;
 use App\Models\Document;
-use Illuminate\Foundation\Http\FormRequest;
 
-class StoreDocumentRequest extends FormRequest
+class StoreDocumentRequest extends ApiFormRequest
 {
     public function authorize(): bool
     {

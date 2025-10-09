@@ -74,15 +74,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/documents/{document}', [DocumentController::class, 'destroy']);
 });
 
+// Liste tous les services disponibles côté administration.
+Route::get('/services', [ServiceController::class, 'index'])->middleware('auth:sanctum');
+Route::get('/services/{service}', [ServiceController::class, 'show'])->middleware('auth:sanctum');
+
 Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
-    // Liste tous les services disponibles côté administration.
-    Route::get('/services', [ServiceController::class, 'index']);
 
     // Crée un nouveau service disponible pour les utilisateurs.
     Route::post('/services', [ServiceController::class, 'store']);
 
-    // Affiche le détail d'un service pour consultation.
-    Route::get('/services/{service}', [ServiceController::class, 'show']);
 
     // Met à jour complètement un service existant.
     Route::put('/services/{service}', [ServiceController::class, 'update']);

@@ -3,10 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Models\Demande;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateDemandeRequest extends FormRequest
+class UpdateDemandeRequest extends ApiFormRequest
 {
     public function authorize(): bool
     {

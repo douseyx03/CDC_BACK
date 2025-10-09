@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Auth;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\ApiFormRequest;
 
-class RegisterRequest extends FormRequest
+class RegisterRequest extends ApiFormRequest
 {
     public function authorize(): bool
     {
@@ -23,7 +23,7 @@ class RegisterRequest extends FormRequest
             'nom_entreprise' => ['nullable', 'string', 'min:2', 'max:255'],
             'type_entreprise' => ['nullable', 'string', 'in:pme,grande_entreprise,startup,cooperative'],
             'nom_institution' => ['nullable', 'string', 'min:2', 'max:255'],
-            'type_institution' => ['nullable', 'string', 'in:banque,assurance,microfinace,institution_gouvernementale'],
+            'type_institution' => ['nullable', 'string', 'in:banque,assurance,microfinance,institution_gouvernementale'],
         ];
     }
 

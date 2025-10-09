@@ -3,9 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Models\Document;
-use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateDocumentRequest extends FormRequest
+class UpdateDocumentRequest extends ApiFormRequest
 {
     public function authorize(): bool
     {
