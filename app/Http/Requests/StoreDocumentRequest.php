@@ -2,27 +2,25 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Demande;
+use App\Models\Document;
 
-class StoreDocumentRequest extends FormRequest
+class StoreDocumentRequest extends ApiFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        $demande = $this->route('demande');
+
+        return $demande instanceof Demande
+            ? ($this->user()?->can('create', [Document::class, $demande]) ?? false)
+            : false;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'titre' => ['nullable', 'string', 'max:255'],
+            'fichier' => ['required', 'file', 'max:5120'],
         ];
     }
 }

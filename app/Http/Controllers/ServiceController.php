@@ -5,62 +5,55 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreServiceRequest;
 use App\Http\Requests\UpdateServiceRequest;
 use App\Models\Service;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ServiceController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request): JsonResponse
     {
-        //
+        $this->authorize('viewAny', Service::class);
+
+        $services = Service::query()
+            ->latest()
+            ->paginate($request->integer('per_page', 15));
+
+        return response()->json($services);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function store(StoreServiceRequest $request): JsonResponse
     {
-        //
+        $validated = $request->validated();
+
+        $service = Service::create(
+            array_merge($validated, [
+                'user_id' => $request->user()->id,
+            ])
+        );
+
+        return response()->json($service, 201);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreServiceRequest $request)
+    public function show(Service $service): JsonResponse
     {
-        //
+        $this->authorize('view', $service);
+
+        return response()->json($service);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Service $service)
+    public function update(UpdateServiceRequest $request, Service $service): JsonResponse
     {
-        //
+        $service->update($request->validated());
+
+        return response()->json($service->fresh());
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Service $service)
+    public function destroy(Service $service): JsonResponse
     {
-        //
-    }
+        $this->authorize('delete', $service);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateServiceRequest $request, Service $service)
-    {
-        //
-    }
+        $service->delete();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Service $service)
-    {
-        //
+        return response()->json(null, 204);
     }
 }

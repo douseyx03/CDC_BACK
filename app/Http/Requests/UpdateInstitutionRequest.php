@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-
-class UpdateInstitutionRequest extends FormRequest
+class UpdateInstitutionRequest extends ApiFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

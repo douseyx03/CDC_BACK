@@ -2,27 +2,41 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Service;
 
-class StoreServiceRequest extends FormRequest
+class StoreServiceRequest extends ApiFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return $this->user()?->can('create', Service::class) ?? false;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'nom' => ['bail', 'required', 'string', 'max:255'],
+            'description' => ['bail', 'required', 'string'],
+            'avantage' => ['bail', 'required', 'array', 'min:1'],
+            'avantage.*' => ['bail', 'string', 'min:1'],
+            'delai' => ['bail', 'required', 'string', 'max:255'],
+            'montant_min' => ['bail', 'required', 'numeric', 'min:0'],
+            'document_requis' => ['bail', 'required', 'array', 'min:1'],
+            'document_requis.*' => ['bail', 'string', 'min:1'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        foreach (['avantage', 'document_requis'] as $field) {
+            $value = $this->input($field);
+
+            if (is_string($value)) {
+                $decoded = json_decode($value, true);
+
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $this->merge([$field => $decoded]);
+                }
+            }
+        }
     }
 }

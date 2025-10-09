@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -24,7 +25,7 @@ class User extends Authenticatable
         'prenom',
         'email',
         'telephone',
-        'password'
+        'password',
     ];
 
     /**
@@ -46,6 +47,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -68,5 +70,53 @@ class User extends Authenticatable
     public function demandes(): HasMany
     {
         return $this->hasMany(Demande::class, 'user_id');
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->institution !== null;
+    }
+
+    public function profileType(): ?string
+    {
+        if ($this->particulier) {
+            return 'particulier';
+        }
+
+        if ($this->entreprise) {
+            return 'entreprise';
+        }
+
+        if ($this->institution) {
+            return 'institution';
+        }
+
+        return null;
+    }
+
+    public function profileTypeLabel(): ?string
+    {
+        $type = $this->profileType();
+
+        return $type ? match ($type) {
+            'particulier' => 'Particulier',
+            'entreprise' => 'Entreprise',
+            'institution' => 'Institution',
+            default => null,
+        } : null;
+    }
+
+    public function ensureProfileType(?string $type): bool
+    {
+        if ($type === null) {
+            return true;
+        }
+
+        return $this->profileType() === strtolower($type);
+    }
+
+    public function phoneVerificationCode(): HasOne
+    {
+        return $this->hasOne(PhoneVerificationCode::class);
     }
 }
