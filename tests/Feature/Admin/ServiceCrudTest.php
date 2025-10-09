@@ -32,7 +32,9 @@ class ServiceCrudTest extends TestCase
 
         $response->assertCreated()
             ->assertJsonPath('nom', 'Aide à domicile')
-            ->assertJsonPath('avantage.0', 'Rapide');
+            ->assertJsonPath('avantage', json_encode($payload['avantage'], JSON_UNESCAPED_UNICODE))
+            ->assertJsonPath('document_requis', json_encode($payload['document_requis'], JSON_UNESCAPED_UNICODE))
+            ->assertJsonPath('montant_min', 150.5);
 
         $this->assertDatabaseHas('services', [
             'nom' => 'Aide à domicile',
@@ -104,7 +106,7 @@ class ServiceCrudTest extends TestCase
 
         Service::factory()->count(3)->for($admin, 'owner')->create();
 
-        $response = $this->getJson('/api/admin/services');
+        $response = $this->getJson('/api/services');
 
         $response->assertOk()
             ->assertJsonStructure(['data', 'current_page', 'last_page', 'per_page']);
@@ -117,7 +119,16 @@ class ServiceCrudTest extends TestCase
 
         Sanctum::actingAs($user);
 
-        $this->getJson('/api/admin/services')->assertForbidden();
+        $this->getJson('/api/services')->assertForbidden();
+    }
+
+    public function test_unauthenticated_requests_receive_json_401(): void
+    {
+        $this->getJson('/api/services')
+            ->assertUnauthorized()
+            ->assertExactJson([
+                'message' => 'Authentification requise. Fournissez un jeton d\'accès valide.',
+            ]);
     }
 
     private function makeAdmin(): User
