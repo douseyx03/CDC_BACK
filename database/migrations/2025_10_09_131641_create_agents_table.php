@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('agents', function (Blueprint $table) {
             $table->id();
-            $table->string('division');
-            $table->string('matricule');
-            $table->string('poste');
+            $table->string('division')->index();
+            $table->string('matricule')->unique();
+            $table->string('poste')->index();
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

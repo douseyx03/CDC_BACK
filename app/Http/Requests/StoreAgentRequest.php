@@ -2,16 +2,14 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-
-class StoreAgentRequest extends FormRequest
+class StoreAgentRequest extends ApiFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +20,10 @@ class StoreAgentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'division' => ['bail', 'required', 'string', 'max:255'],
+            'matricule' => ['bail', 'required', 'string', 'max:100', 'unique:agents,matricule'],
+            'poste' => ['bail', 'required', 'string', 'max:255'],
+            'user_id' => ['bail', 'required', 'integer', 'exists:users,id', 'unique:agents,user_id'],
         ];
     }
 }
