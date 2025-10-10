@@ -20,10 +20,15 @@ class StoreAgentRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
+            'nom' => ['bail', 'required', 'string', 'max:255'],
+            'prenom' => ['bail', 'required', 'string', 'max:255'],
+            'email' => ['bail', 'required', 'email:rfc', 'max:255', 'unique:users,email'],
+            'telephone' => ['bail', 'required', 'string', 'regex:/^\+?[0-9]{7,15}$/', 'unique:users,telephone'],
             'division' => ['bail', 'required', 'string', 'max:255'],
             'matricule' => ['bail', 'required', 'string', 'max:100', 'unique:agents,matricule'],
             'poste' => ['bail', 'required', 'string', 'max:255'],
-            'user_id' => ['bail', 'required', 'integer', 'exists:users,id', 'unique:agents,user_id'],
+            'roles' => ['bail', 'required', 'array', 'min:1'],
+            'roles.*' => ['bail', 'string', 'exists:roles,name'],
         ];
     }
 }

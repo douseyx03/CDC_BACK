@@ -8,6 +8,7 @@ use App\Models\Service;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class ServiceCrudTest extends TestCase
@@ -28,7 +29,7 @@ class ServiceCrudTest extends TestCase
             'document_requis' => ['Pièce d’identité'],
         ];
 
-        $response = $this->postJson('/api/admin/services', $payload);
+        $response = $this->postJson('/api/backoffice/services', $payload);
 
         $response->assertCreated()
             ->assertJsonPath('nom', 'Aide à domicile')
@@ -49,7 +50,7 @@ class ServiceCrudTest extends TestCase
 
         Sanctum::actingAs($user);
 
-        $response = $this->postJson('/api/admin/services', [
+        $response = $this->postJson('/api/backoffice/services', [
             'nom' => 'Service Test',
             'description' => 'Description',
             'avantage' => ['Test'],
@@ -70,7 +71,7 @@ class ServiceCrudTest extends TestCase
             'nom' => 'Ancien nom',
         ]);
 
-        $response = $this->putJson("/api/admin/services/{$service->id}", [
+        $response = $this->putJson("/api/backoffice/services/{$service->id}", [
             'nom' => 'Nouveau nom',
             'montant_min' => 250,
         ]);
@@ -93,7 +94,7 @@ class ServiceCrudTest extends TestCase
 
         $service = Service::factory()->for($admin, 'owner')->create();
 
-        $response = $this->deleteJson("/api/admin/services/{$service->id}");
+        $response = $this->deleteJson("/api/backoffice/services/{$service->id}");
 
         $response->assertNoContent();
         $this->assertDatabaseMissing('services', ['id' => $service->id]);
@@ -139,6 +140,9 @@ class ServiceCrudTest extends TestCase
             'nom_institution' => 'CDC',
             'type_institution' => 'institution_gouvernementale',
         ]);
+
+        $role = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
+        $user->syncRoles([$role]);
 
         return $user;
     }

@@ -5,62 +5,49 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreAgentRequest;
 use App\Http\Requests\UpdateAgentRequest;
 use App\Models\Agent;
+use App\Services\Agent\AgentService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class AgentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(private readonly AgentService $agentService)
     {
-        //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function index(Request $request): JsonResponse
     {
-        //
+        $agents = Agent::query()
+            ->with(['user.roles'])
+            ->latest()
+            ->paginate($request->integer('per_page', 15));
+
+        return response()->json($agents);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreAgentRequest $request)
+    public function store(StoreAgentRequest $request): JsonResponse
     {
-        //
+        $agent = $this->agentService->create($request->validated());
+
+        return response()->json($agent, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Agent $agent)
+    public function show(Agent $agent): JsonResponse
     {
-        //
+        return response()->json($agent->load(['user.roles']));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Agent $agent)
+    public function update(UpdateAgentRequest $request, Agent $agent): JsonResponse
     {
-        //
+        $agent = $this->agentService->update($agent, $request->validated());
+
+        return response()->json($agent);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateAgentRequest $request, Agent $agent)
+    public function destroy(Agent $agent): JsonResponse
     {
-        //
-    }
+        $this->agentService->delete($agent);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Agent $agent)
-    {
-        //
+        return response()->json(null, 204);
     }
 }
