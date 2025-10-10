@@ -9,6 +9,8 @@ use Illuminate\Database\DatabaseManager;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Exceptions\RoleDoesNotExist;
 
 class AgentService
 {
@@ -41,7 +43,7 @@ class AgentService
             ]);
 
             if (!empty($data['roles'])) {
-                $user->syncRoles($data['roles']);
+                $this->syncUserRoles($user, $data['roles']);
             }
 
             $user->notify(new AgentCredentialsNotification($password));
@@ -71,7 +73,7 @@ class AgentService
             }
 
             if (array_key_exists('roles', $data)) {
-                $user->syncRoles($data['roles'] ?? []);
+                $this->syncUserRoles($user, $data['roles'] ?? []);
             }
 
             return $agent->load(['user.roles']);
@@ -85,5 +87,16 @@ class AgentService
             $user?->syncRoles([]);
             $agent->delete();
         });
+    }
+
+    private function syncUserRoles(User $user, array $roles): void
+    {
+        try {
+            $user->syncRoles($roles);
+        } catch (RoleDoesNotExist $exception) {
+            throw ValidationException::withMessages([
+                'roles' => [$exception->getMessage()],
+            ]);
+        }
     }
 }

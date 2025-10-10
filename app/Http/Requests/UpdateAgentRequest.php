@@ -6,6 +6,16 @@ use Illuminate\Validation\Rule;
 
 class UpdateAgentRequest extends ApiFormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $roles = $this->input('roles');
+
+        if (is_string($roles)) {
+            $normalized = array_filter(array_map('trim', preg_split('/[,;]+/', $roles)));
+            $this->merge(['roles' => $normalized]);
+        }
+    }
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -34,7 +44,11 @@ class UpdateAgentRequest extends ApiFormRequest
             'matricule' => ['sometimes', 'required', 'string', 'max:100', Rule::unique('agents', 'matricule')->ignore($agentId)],
             'poste' => ['sometimes', 'required', 'string', 'max:255'],
             'roles' => ['sometimes', 'array'],
-            'roles.*' => ['bail', 'string', Rule::exists('roles', 'name')],
+            'roles.*' => [
+                'bail',
+                'string',
+                Rule::exists('roles', 'name')->where(fn ($query) => $query->where('guard_name', 'sanctum')),
+            ],
         ];
     }
 }

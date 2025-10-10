@@ -7,6 +7,7 @@ use App\Http\Requests\Backoffice\UpdateBackofficeDemandeRequest;
 use App\Http\Requests\Backoffice\UpdateBackofficeDocumentRequest;
 use App\Models\Demande;
 use App\Models\Document;
+use App\Notifications\DemandeUpdatedNotification;
 use App\Services\Demande\DemandeService;
 use App\Services\Demande\DocumentService;
 use Illuminate\Http\JsonResponse;
@@ -68,11 +69,50 @@ class BackofficeDemandeController extends Controller
 
     public function update(UpdateBackofficeDemandeRequest $request, Demande $demande): JsonResponse
     {
+        $oldStatus = $demande->status;
+        $oldUrgent = $demande->urgent;
+        $oldDescription = $demande->description;
+
+        $addedFilesCount = $request->hasFile('documents') ? count($request->file('documents')) : 0;
+        $removedDocsCount = count($request->input('documents_to_remove', []));
+
         $demande = $this->demandeService->update(
             $demande,
             $request->validated(),
             $request->user()
         );
+
+        $messages = [];
+
+        if ($oldStatus !== $demande->status) {
+            $messages[] = sprintf(
+                "Statut changé de ‘%s’ à ‘%s’.",
+                $oldStatus ?? 'non défini',
+                $demande->status ?? 'non défini'
+            );
+        }
+
+        if ($request->filled('urgent') && $oldUrgent !== $demande->urgent) {
+            $messages[] = $demande->urgent
+                ? 'La demande est désormais marquée comme urgente.'
+                : 'La demande n’est plus marquée comme urgente.';
+        }
+
+        if ($request->filled('description') && $oldDescription !== $demande->description) {
+            $messages[] = 'La description de la demande a été mise à jour.';
+        }
+
+        if ($addedFilesCount > 0) {
+            $messages[] = $addedFilesCount.' document(s) ont été ajoutés à votre demande.';
+        }
+
+        if ($removedDocsCount > 0) {
+            $messages[] = $removedDocsCount.' document(s) ont été supprimés de votre demande.';
+        }
+
+        if (!empty($messages) && $demande->user) {
+            $demande->user->notify(new DemandeUpdatedNotification($demande, $messages));
+        }
 
         return response()->json($demande->load(['user', 'service', 'documents']));
     }
@@ -81,26 +121,62 @@ class BackofficeDemandeController extends Controller
     {
         $data = $request->validated();
 
-        $this->documentService->storeMany(
+        $stored = $this->documentService->storeMany(
             $demande,
             $data['documents'],
             $data['documents_meta'] ?? [],
             $request->user()->id
         );
 
-        return response()->json($demande->fresh('documents'), 201);
+        $demande = $demande->fresh('documents');
+        $demande->loadMissing(['user', 'service']);
+
+        if (!empty($stored) && $demande?->user) {
+            $demande->user->notify(new DemandeUpdatedNotification(
+                $demande,
+                [count($stored).' document(s) ont été ajoutés à votre demande.']
+            ));
+        }
+
+        return response()->json($demande, 201);
     }
 
     public function updateDocument(UpdateBackofficeDocumentRequest $request, Document $document): JsonResponse
     {
+        $demande = $document->demande;
+        $oldTitle = $document->titre;
+
         $document->update($request->validated());
+
+        $demande = $demande?->fresh('documents');
+        $demande?->loadMissing(['user', 'service']);
+
+        if ($demande && $demande->user) {
+            $demande->user->notify(new DemandeUpdatedNotification(
+                $demande,
+                [sprintf("Le document ‘%s’ a été renommé en ‘%s’.", $oldTitle, $document->titre)]
+            ));
+        }
 
         return response()->json($document);
     }
 
     public function destroyDocument(Document $document): JsonResponse
     {
+        $demande = $document->demande;
+        $titre = $document->titre;
+
         $this->documentService->delete($document);
+
+        $demande = $demande?->fresh('documents');
+        $demande?->loadMissing(['user', 'service']);
+
+        if ($demande && $demande->user) {
+            $demande->user->notify(new DemandeUpdatedNotification(
+                $demande,
+                [sprintf("Le document ‘%s’ a été supprimé.", $titre)]
+            ));
+        }
 
         return response()->json(null, 204);
     }
