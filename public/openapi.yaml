@@ -1,0 +1,553 @@
+openapi: 3.1.0
+info:
+  title: CDC Backoffice API
+  version: 1.0.0
+  description: |
+    Documentation OpenAPI décrivant l’API d’authentification, de gestion des demandes et du backoffice.
+servers:
+  - url: https://{host}/api
+    variables:
+      host:
+        default: localhost
+components:
+  securitySchemes:
+    BearerToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - BearerToken: []
+paths:
+  /auth/register:
+    post:
+      summary: Inscription utilisateur
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nom, prenom, email, telephone, password, password_confirmation, type_utilisateur]
+              properties:
+                nom: { type: string }
+                prenom: { type: string }
+                email: { type: string, format: email }
+                telephone: { type: string }
+                password: { type: string, format: password }
+                password_confirmation: { type: string, format: password }
+                type_utilisateur: { type: string, enum: [particulier, entreprise, institution] }
+                nom_entreprise: { type: string, nullable: true }
+                type_entreprise: { type: string, nullable: true }
+                nom_institution: { type: string, nullable: true }
+                type_institution: { type: string, nullable: true }
+      responses:
+        '201': { description: Utilisateur créé }
+        '422': { description: Erreurs de validation }
+  /auth/login:
+    post:
+      summary: Connexion (email ou téléphone)
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                email: { type: string, format: email, nullable: true }
+                telephone: { type: string, nullable: true }
+                password: { type: string, format: password }
+                device_name: { type: string, nullable: true }
+      responses:
+        '200': { description: Token délivré }
+        '202': { description: OTP requis }
+        '403': { description: Email non vérifié }
+        '422': { description: Identifiants invalides }
+  /demandes:
+    get:
+      summary: Liste des demandes de l’utilisateur
+      tags: [Demandes]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: query
+          name: type
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: urgent
+          schema: { type: boolean }
+        - in: query
+          name: service_id
+          schema: { type: integer }
+      responses:
+        '200': { description: Liste paginée }
+    post:
+      summary: Créer une demande
+      tags: [Demandes]
+      security: [{ BearerToken: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [type_demande, description, service_id]
+              properties:
+                type_demande: { type: string }
+                description: { type: string }
+                urgent: { type: boolean }
+                service_id: { type: integer }
+                documents:
+                  type: array
+                  items: { type: string, format: binary }
+      responses:
+        '201': { description: Demande créée }
+  /demandes/{demande}:
+    get:
+      summary: Détail d’une demande
+      tags: [Demandes]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: demande
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Demande }
+    patch:
+      summary: Mettre à jour une demande
+      tags: [Demandes]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: demande
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                description: { type: string }
+                status: { type: string }
+                urgent: { type: boolean }
+                documents:
+                  type: array
+                  items: { type: string, format: binary }
+                documents_to_remove:
+                  type: array
+                  items: { type: integer }
+      responses:
+        '200': { description: Demande mise à jour }
+    delete:
+      summary: Supprimer une demande
+      tags: [Demandes]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: demande
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Supprimée }
+  /backoffice/demandes:
+    get:
+      summary: Liste des demandes (backoffice)
+      tags: [Backoffice Demandes]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: type
+          schema: { type: string }
+        - in: query
+          name: urgent
+          schema: { type: boolean }
+        - in: query
+          name: service_id
+          schema: { type: integer }
+        - in: query
+          name: user_id
+          schema: { type: integer }
+        - in: query
+          name: created_from
+          schema: { type: string, format: date }
+        - in: query
+          name: created_to
+          schema: { type: string, format: date }
+      responses:
+        '200': { description: Liste paginée }
+  /backoffice/demandes/{demande}:
+    get:
+      summary: Détail complet d’une demande (backoffice)
+      tags: [Backoffice Demandes]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: demande
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Demande }
+    patch:
+      summary: Mise à jour d’une demande (backoffice)
+      tags: [Backoffice Demandes]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: demande
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                status: { type: string }
+                urgent: { type: boolean }
+                description: { type: string }
+                documents:
+                  type: array
+                  items: { type: string, format: binary }
+                documents_to_remove:
+                  type: array
+                  items: { type: integer }
+      responses:
+        '200': { description: Demande mise à jour }
+  /backoffice/demandes/{demande}/documents:
+    post:
+      summary: Ajouter des documents (backoffice)
+      tags: [Backoffice Documents]
+      security: [{ BearerToken: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [documents]
+              properties:
+                documents:
+                  type: array
+                  items: { type: string, format: binary }
+                documents_meta:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      titre: { type: string }
+      responses:
+        '201': { description: Documents ajoutés }
+  /backoffice/documents/{document}:
+    patch:
+      summary: Mettre à jour un document (backoffice)
+      tags: [Backoffice Documents]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: document
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [titre]
+              properties:
+                titre: { type: string }
+      responses:
+        '200': { description: Document mis à jour }
+    delete:
+      summary: Supprimer un document
+      tags: [Backoffice Documents]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: document
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Document supprimé }
+  /backoffice/agents:
+    get:
+      summary: Liste des agents
+      tags: [Backoffice Agents]
+      security: [{ BearerToken: [] }]
+      responses:
+        '200': { description: Liste paginée }
+    post:
+      summary: Créer un agent
+      tags: [Backoffice Agents]
+      security: [{ BearerToken: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nom, prenom, email, telephone, division, matricule, poste, roles]
+              properties:
+                nom: { type: string }
+                prenom: { type: string }
+                email: { type: string, format: email }
+                telephone: { type: string }
+                division: { type: string }
+                matricule: { type: string }
+                poste: { type: string }
+                roles:
+                  type: array
+                  items: { type: string }
+      responses:
+        '201': { description: Agent créé }
+  /backoffice/agents/{agent}:
+    get:
+      summary: Détail d’un agent
+      tags: [Backoffice Agents]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: agent
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Agent }
+    put:
+      summary: Mise à jour complète d’un agent
+      tags: [Backoffice Agents]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: agent
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nom: { type: string }
+                prenom: { type: string }
+                email: { type: string }
+                telephone: { type: string }
+                division: { type: string }
+                matricule: { type: string }
+                poste: { type: string }
+                roles:
+                  type: array
+                  items: { type: string }
+      responses:
+        '200': { description: Agent mis à jour }
+    patch:
+      summary: Mise à jour partielle d’un agent
+      tags: [Backoffice Agents]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: agent
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Agent modifié }
+    delete:
+      summary: Supprimer un agent
+      tags: [Backoffice Agents]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: agent
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Agent supprimé }
+  /backoffice/roles:
+    get:
+      summary: Liste des rôles
+      tags: [Backoffice Rôles]
+      security: [{ BearerToken: [] }]
+      responses:
+        '200': { description: Liste paginée }
+    post:
+      summary: Créer un rôle
+      tags: [Backoffice Rôles]
+      security: [{ BearerToken: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                guard_name: { type: string }
+                permissions:
+                  type: array
+                  items: { type: string }
+      responses:
+        '201': { description: Rôle créé }
+  /backoffice/roles/{role}:
+    get:
+      summary: Détail d’un rôle
+      tags: [Backoffice Rôles]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: role
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Rôle }
+    put:
+      summary: Mise à jour complète d’un rôle
+      tags: [Backoffice Rôles]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: role
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                guard_name: { type: string }
+                permissions:
+                  type: array
+                  items: { type: string }
+      responses:
+        '200': { description: Rôle mis à jour }
+    patch:
+      summary: Mise à jour partielle d’un rôle
+      tags: [Backoffice Rôles]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: role
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Rôle mis à jour }
+    delete:
+      summary: Supprimer un rôle
+      tags: [Backoffice Rôles]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: role
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Supprimé }
+  /backoffice/permissions:
+    get:
+      summary: Liste des permissions
+      tags: [Backoffice Permissions]
+      security: [{ BearerToken: [] }]
+      responses:
+        '200': { description: Liste paginée }
+    post:
+      summary: Créer une permission
+      tags: [Backoffice Permissions]
+      security: [{ BearerToken: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                guard_name: { type: string }
+      responses:
+        '201': { description: Permission créée }
+  /backoffice/permissions/{permission}:
+    get:
+      summary: Détail d’une permission
+      tags: [Backoffice Permissions]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: permission
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Permission }
+    put:
+      summary: Mise à jour d’une permission
+      tags: [Backoffice Permissions]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: permission
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                guard_name: { type: string }
+      responses:
+        '200': { description: Permission mise à jour }
+    patch:
+      summary: Mise à jour partielle d’une permission
+      tags: [Backoffice Permissions]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: permission
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Permission mise à jour }
+    delete:
+      summary: Supprimer une permission
+      tags: [Backoffice Permissions]
+      security: [{ BearerToken: [] }]
+      parameters:
+        - in: path
+          name: permission
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Supprimée }
