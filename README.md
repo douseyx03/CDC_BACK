@@ -1,61 +1,102 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# CDC Back Office API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Backend Laravel application powering the CDC customer demand platform. It exposes public endpoints for end users (demands, documents, services) as well as protected back-office features for agents, roles, and permissions. Notifications (email) and other long running tasks are dispatched through Laravel queues.
 
-## About Laravel
+## Requirements
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.2+
+- Composer 2
+- Node.js 18+ (for frontend asset builds used during local development)
+- MySQL 8 (default `.env` values assume `root:root@127.0.0.1:8889`)
+- Redis is optional; default queue driver uses MySQL via the `jobs` table
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Getting Started
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+1. Install PHP dependencies:
+   ```bash
+   composer install
+   ```
+2. Copy the environment file and adjust settings (DB, mail, URLs):
+   ```bash
+   cp .env.example .env
+   ```
+3. Generate an application key:
+   ```bash
+   php artisan key:generate
+   ```
+4. Run the migrations (includes tables for queues, roles/permissions, and domain models):
+   ```bash
+   php artisan migrate
+   ```
+5. Seed base roles/permissions (créés avec le guard `sanctum`) si besoin :
+   ```bash
+   php artisan db:seed --class=RolePermissionSeeder
+   ```
+6. Install JavaScript dependencies (optional for API only usage, required for Vite dev tooling):
+   ```bash
+   npm install
+   ```
 
-## Learning Laravel
+## Running the Application
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- Serve the API locally:
+  ```bash
+  php artisan serve
+  ```
+- Optionally run the helper script defined in `composer.json` to launch the server, queue listener, log tailing, and Vite in parallel:
+  ```bash
+  composer dev
+  ```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Queues & Notifications
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- Email notifications such as `AgentCredentialsNotification` and `DemandeUpdatedNotification` implement `ShouldQueue`. Jobs are stored in the `jobs` table (database driver).
+- Start a worker and keep it running in the background so queued notifications are processed:
+  ```bash
+  php artisan queue:work --queue=default
+  ```
+- In development you can switch to synchronous dispatch by setting `QUEUE_CONNECTION=sync` in `.env` if you do not wish to run a worker.
+- Failed jobs are logged in `failed_jobs`. Inspect failures via:
+  ```bash
+  php artisan queue:failed
+  ```
+  To retry all failed jobs:
+  ```bash
+  php artisan queue:retry all
+  ```
+- Mail delivery defaults to Mailtrap. The free plan is rate limited; if you hit errors such as `550 5.7.0 Too many emails per second`, pause/resume after a delay or upgrade your SMTP provider.
 
-## Laravel Sponsors
+## API Overview
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+All routes live in `routes/api.php`. Highlights:
 
-### Premium Partners
+- Public (authenticated via Sanctum) endpoints for demands, documents, and services.
+- Back-office routes prefixed with `/backoffice` guarded by the `super-admin` role: manage services, demands, documents, agents, roles, and permissions.
+- Request validation classes live under `app/Http/Requests` (e.g., `StoreAgentRequest`, `UpdateAgentRequest`), ensuring role names exist for the `sanctum` guard and normalising string role payloads.
+- Business logic for agents is handled in `app/Services/Agent/AgentService.php` where user creation, role assignment, and notification dispatch occur inside DB transactions.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Testing
 
-## Contributing
+Run the application test suite with:
+```bash
+php artisan test
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+When testing queued notifications, either process queued jobs with `queue:work` or temporarily set `QUEUE_CONNECTION=sync`.
 
-## Code of Conduct
+## Troubleshooting
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- **Mailtrap rate limits**: Reduce the number of immediate notifications or switch to the `log` mail driver (`MAIL_MAILER=log`) during development.
+- **Missing back-office roles**: Ensure roles intended for agent assignment exist with `guard_name = sanctum`. You can sync roles via Artisan Tinker:
+  ```bash
+  php artisan tinker --execute="Spatie\\Permission\\Models\\Role::where('name', 'verificateur')->update(['guard_name' => 'sanctum']);"
+  ```
+  Pour aligner toutes les permissions/roles existants :
+  ```bash
+  php artisan tinker --execute="Spatie\\Permission\\Models\\Role::query()->update(['guard_name' => 'sanctum']); Spatie\\Permission\\Models\\Permission::query()->update(['guard_name' => 'sanctum']);"
+  ```
+- **Queue not processing**: Confirm the worker is running and that the `jobs` table is emptying. Use `php artisan queue:flush` to clear stuck jobs during local development.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is licensed under the MIT license.

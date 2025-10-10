@@ -45,6 +45,14 @@
             </a>
         </li>
     </ul>
+    <section style="margin-top:2.5rem; background:#fff; border-radius:.75rem; padding:1.5rem; box-shadow:0 10px 28px rgba(15,23,42,0.08);">
+        <h2 style="margin-top:0; font-size:1.25rem;">Notes de version</h2>
+        <ul style="list-style:disc; padding-left:1.15rem; color:#334155;">
+            <li>Les routes de gestion des agents précisent désormais que les rôles doivent exister avec le guard <code>sanctum</code>. Un envoi de chaîne séparée est automatiquement normalisé, et le seeder <code>RolePermissionSeeder</code> alimente les rôles/permissions avec ce guard.</li>
+            <li>Les erreurs 422 des viewers exposent la structure de réponse commune (`message` + `errors`).</li>
+            <li>Les notifications e-mail (création d’agent, mises à jour de demande) transitent par la queue <code>database</code>. Pensez à lancer <code>php artisan queue:work</code> en local.</li>
+        </ul>
+    </section>
 </main>
 <footer>
     Copyright &copy; {{ date('Y') }} Caisse de Dépots et de Consignations. Tous droits réservés. Développé par Seydou Diallo(<a href="https://github.com/douseyx03" target="_blank">douseyx03</a>).

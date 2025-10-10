@@ -4,6 +4,10 @@ info:
   version: 1.0.0
   description: |
     Documentation OpenAPI décrivant l’API d’authentification, de gestion des demandes et du backoffice.
+
+    Points d’attention récents :
+      - Les rôles attribués aux agents doivent exister avec le guard `sanctum`.
+      - Les e-mails (création d’agent, mises à jour de demande) sont envoyés via la file de jobs `database`; assurez-vous qu’un worker tourne (`php artisan queue:work`).
 servers:
   - url: http://127.0.0.1:8000/api
     # variables:
@@ -15,6 +19,19 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  schemas:
+    ValidationError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Les données fournies sont invalides.
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
 security:
   - BearerToken: []
 paths:
@@ -43,7 +60,12 @@ paths:
                 type_institution: { type: string, nullable: true }
       responses:
         '201': { description: Utilisateur créé }
-        '422': { description: Erreurs de validation }
+        '422':
+          description: Erreurs de validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
   /auth/login:
     post:
       summary: Connexion (email ou téléphone)
@@ -64,7 +86,12 @@ paths:
         '200': { description: Token délivré }
         '202': { description: OTP requis }
         '403': { description: Email non vérifié }
-        '422': { description: Identifiants invalides }
+        '422':
+          description: Identifiants invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
   /demandes:
     get:
       summary: Liste des demandes de l’utilisateur
@@ -308,9 +335,19 @@ paths:
                 poste: { type: string }
                 roles:
                   type: array
-                  items: { type: string }
+                  description: >-
+                    Liste des noms de rôles (guard `sanctum`). Une chaîne séparée par des virgules/points-virgules est acceptée.
+                  items:
+                    type: string
+                  example: [verificateur, agence]
       responses:
         '201': { description: Agent créé }
+        '422':
+          description: Erreur de validation (rôle inexistant, doublon…)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
   /backoffice/agents/{agent}:
     get:
       summary: Détail d’un agent
@@ -348,9 +385,18 @@ paths:
                 poste: { type: string }
                 roles:
                   type: array
-                  items: { type: string }
+                  description: >-
+                    Liste des rôles (guard `sanctum`). Peut aussi être transmise sous forme de chaîne séparée.
+                  items:
+                    type: string
       responses:
         '200': { description: Agent mis à jour }
+        '422':
+          description: Erreur de validation (champ unique ou rôle invalide)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
     patch:
       summary: Mise à jour partielle d’un agent
       tags: [Backoffice Agents]
@@ -368,6 +414,12 @@ paths:
               type: object
       responses:
         '200': { description: Agent modifié }
+        '422':
+          description: Erreur de validation (champ unique ou rôle invalide)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
     delete:
       summary: Supprimer un agent
       tags: [Backoffice Agents]

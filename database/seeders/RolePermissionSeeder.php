@@ -13,6 +13,8 @@ class RolePermissionSeeder extends Seeder
     {
         //Decommenter la ligne 14 en prod pour que les nouvelles permissions soient prises en compte
         app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $guard = 'sanctum';
+
         $permissions = collect([
             'agents.view',
             'agents.manage',
@@ -28,16 +30,16 @@ class RolePermissionSeeder extends Seeder
             'roles.manage',
             'permissions.view',
             'permissions.manage',
-        ])->map(function (string $name) {
+        ])->map(function (string $name) use ($guard) {
             return Permission::firstOrCreate([
                 'name' => $name,
-                'guard_name' => 'web',
+                'guard_name' => $guard,
             ]);
         });
 
-        $superAdmin = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
-        $verificateur = Role::firstOrCreate(['name' => 'verificateur', 'guard_name' => 'web']);
-        $gestionnaire = Role::firstOrCreate(['name' => 'gestionnaire', 'guard_name' => 'web']);
+        $superAdmin = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => $guard]);
+        $verificateur = Role::firstOrCreate(['name' => 'verificateur', 'guard_name' => $guard]);
+        $gestionnaire = Role::firstOrCreate(['name' => 'gestionnaire', 'guard_name' => $guard]);
 
         $superAdmin->syncPermissions($permissions);
 
