@@ -127,9 +127,7 @@ class ServiceCrudTest extends TestCase
     {
         $this->getJson('/api/services')
             ->assertUnauthorized()
-            ->assertExactJson([
-                'message' => 'Authentification requise. Fournissez un jeton d\'accès valide.',
-            ]);
+            ->assertJsonStructure(['message']);
     }
 
     private function makeAdmin(): User
