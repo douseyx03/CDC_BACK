@@ -110,7 +110,7 @@ Route::middleware(['auth:sanctum', 'role:super-admin'])->prefix('backoffice')->g
     Route::get('/demandes/{demande}', [BackofficeDemandeController::class, 'show']);
 
     // Met à jour une demande (statut, urgence, description, pièces jointes).
-    Route::patch('/demandes/{demande}', [BackofficeDemandeController::class, 'update']);
+    Route::post('/demandes/{demande}', [BackofficeDemandeController::class, 'update']);
 
     // Ajoute de nouveaux documents à une demande.
     Route::post('/demandes/{demande}/documents', [BackofficeDemandeController::class, 'storeDocument']);
