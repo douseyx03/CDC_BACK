@@ -3,13 +3,16 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
+        //Decommenter la ligne 14 en prod pour que les nouvelles permissions soient prises en compte
+        // app(PermissionRegistrar::class)->forgetCachedPermissions();
         $permissions = collect([
             'agents.view',
             'agents.manage',
@@ -17,6 +20,14 @@ class RolePermissionSeeder extends Seeder
             'services.manage',
             'demandes.view',
             'demandes.manage',
+            'documents.view',
+            'documents.manage',
+            'users.view',
+            'users.manage',
+            'roles.view',
+            'roles.manage',
+            'permissions.view',
+            'permissions.manage',
         ])->map(function (string $name) {
             return Permission::firstOrCreate([
                 'name' => $name,

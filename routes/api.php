@@ -9,6 +9,7 @@ use App\Http\Controllers\DemandeController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\PermissionController;
 
 Route::prefix('auth')->group(function () {
     // Inscription d'un utilisateur avec vérification email/téléphone.
@@ -132,4 +133,23 @@ Route::middleware(['auth:sanctum', 'role:super-admin'])->prefix('backoffice')->g
 
     // Supprime un rôle.
     Route::delete('/roles/{role}', [RoleController::class, 'destroy']);
+
+    //-----------------------Permission------------------------------------------------------------------
+    // Liste toutes les permissions disponibles.
+    Route::get('/permissions', [PermissionController::class, 'index']);
+
+    // Crée une nouvelle permission.
+    Route::post('/permissions', [PermissionController::class, 'store']);
+
+    // Affiche le détail d'une permission spécifique.
+    Route::get('/permissions/{permission}', [PermissionController::class, 'show']);
+
+    // Met à jour une permission existante.
+    Route::put('/permissions/{permission}', [PermissionController::class, 'update']);
+
+    // Met à jour partiellement une permission existante.
+    Route::patch('/permissions/{permission}', [PermissionController::class, 'update']);
+
+    // Supprime une permission.
+    Route::delete('/permissions/{permission}', [PermissionController::class, 'destroy']);
 });
