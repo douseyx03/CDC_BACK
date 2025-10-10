@@ -10,6 +10,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\BackofficeDemandeController;
 
 //------------------------Authentification/Connexion--------------------------------------------------------------------------
 Route::prefix('auth')->group(function () {
@@ -101,7 +102,26 @@ Route::middleware(['auth:sanctum', 'role:super-admin'])->prefix('backoffice')->g
     // Supprime définitivement un service.
     Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
 
-    //-----------------------------------Agent---------------------------------------------------
+    //-----------------------------------Demandes & Documents-----------------------------------
+    // Liste toutes les demandes avec leurs métadonnées.
+    Route::get('/demandes', [BackofficeDemandeController::class, 'index']);
+
+    // Affiche le détail complet d'une demande spécifique.
+    Route::get('/demandes/{demande}', [BackofficeDemandeController::class, 'show']);
+
+    // Met à jour une demande (statut, urgence, description, pièces jointes).
+    Route::patch('/demandes/{demande}', [BackofficeDemandeController::class, 'update']);
+
+    // Ajoute de nouveaux documents à une demande.
+    Route::post('/demandes/{demande}/documents', [BackofficeDemandeController::class, 'storeDocument']);
+
+    // Met à jour les métadonnées d'un document.
+    Route::patch('/documents/{document}', [BackofficeDemandeController::class, 'updateDocument']);
+
+    // Supprime un document lié à une demande.
+    Route::delete('/documents/{document}', [BackofficeDemandeController::class, 'destroyDocument']);
+
+    //-----------------------------------Agents---------------------------------------------------
     // Liste tous les agents du back-office.
     Route::get('/agents', [AgentController::class, 'index']);
 
