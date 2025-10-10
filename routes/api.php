@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\DemandeController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\AgentController;
+use App\Http\Controllers\RoleController;
 
 Route::prefix('auth')->group(function () {
     // Inscription d'un utilisateur avec vérification email/téléphone.
@@ -78,7 +80,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/services', [ServiceController::class, 'index'])->middleware('auth:sanctum');
 Route::get('/services/{service}', [ServiceController::class, 'show'])->middleware('auth:sanctum');
 
-Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+Route::middleware(['auth:sanctum', 'role:super-admin'])->prefix('backoffice')->group(function () {
 
     // Crée un nouveau service disponible pour les utilisateurs.
     Route::post('/services', [ServiceController::class, 'store']);
@@ -92,4 +94,42 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 
     // Supprime définitivement un service.
     Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
+
+    //-----------------------------------Agent---------------------------------------------------
+    // Liste tous les agents du back-office.
+    Route::get('/agents', [AgentController::class, 'index']);
+
+    // Crée un nouvel agent et lui assigne ses rôles.
+    Route::post('/agents', [AgentController::class, 'store']);
+
+    // Affiche le détail d'un agent spécifique.
+    Route::get('/agents/{agent}', [AgentController::class, 'show']);
+
+    // Met à jour complètement les informations d'un agent.
+    Route::put('/agents/{agent}', [AgentController::class, 'update']);
+
+    // Met à jour partiellement les informations d'un agent.
+    Route::patch('/agents/{agent}', [AgentController::class, 'update']);
+
+    // Supprime (soft delete) un agent et retire ses rôles.
+    Route::delete('/agents/{agent}', [AgentController::class, 'destroy']);
+
+    //--------------------------------Roles-----------------------------------------------------
+    // Liste tous les rôles disponibles.
+    Route::get('/roles', [RoleController::class, 'index']);
+
+    // Crée un nouveau rôle et lui associe des permissions.
+    Route::post('/roles', [RoleController::class, 'store']);
+
+    // Affiche le détail d'un rôle spécifique.
+    Route::get('/roles/{role}', [RoleController::class, 'show']);
+
+    // Met à jour un rôle et ses permissions associées.
+    Route::put('/roles/{role}', [RoleController::class, 'update']);
+
+    // Met à jour partiellement un rôle et ses permissions.
+    Route::patch('/roles/{role}', [RoleController::class, 'update']);
+
+    // Supprime un rôle.
+    Route::delete('/roles/{role}', [RoleController::class, 'destroy']);
 });

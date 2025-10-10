@@ -21,13 +21,20 @@ class UpdateAgentRequest extends ApiFormRequest
      */
     public function rules(): array
     {
-        $agentId = $this->route('agent')?->getKey();
+        $agent = $this->route('agent');
+        $agentId = $agent?->getKey();
+        $userId = $agent?->user_id;
 
         return [
+            'nom' => ['sometimes', 'required', 'string', 'max:255'],
+            'prenom' => ['sometimes', 'required', 'string', 'max:255'],
+            'email' => ['sometimes', 'required', 'email:rfc', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
+            'telephone' => ['sometimes', 'required', 'string', 'regex:/^\+?[0-9]{7,15}$/', Rule::unique('users', 'telephone')->ignore($userId)],
             'division' => ['sometimes', 'required', 'string', 'max:255'],
             'matricule' => ['sometimes', 'required', 'string', 'max:100', Rule::unique('agents', 'matricule')->ignore($agentId)],
             'poste' => ['sometimes', 'required', 'string', 'max:255'],
-            'user_id' => ['sometimes', 'required', 'integer', 'exists:users,id', Rule::unique('agents', 'user_id')->ignore($agentId)],
+            'roles' => ['sometimes', 'array'],
+            'roles.*' => ['bail', 'string', Rule::exists('roles', 'name')],
         ];
     }
 }

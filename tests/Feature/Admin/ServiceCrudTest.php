@@ -8,6 +8,7 @@ use App\Models\Service;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class ServiceCrudTest extends TestCase
@@ -139,6 +140,9 @@ class ServiceCrudTest extends TestCase
             'nom_institution' => 'CDC',
             'type_institution' => 'institution_gouvernementale',
         ]);
+
+        $role = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
+        $user->syncRoles([$role]);
 
         return $user;
     }
