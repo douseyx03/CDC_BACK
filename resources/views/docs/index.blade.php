@@ -6,6 +6,7 @@
     <style>
         body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f8fafc; }
         header { background: #0f172a; color: #f8fafc; padding: 2rem; text-align: center; }
+        footer { background: #0f172a; color: #f8fafc; padding: 2rem; text-align: center; }
         main { max-width: 720px; margin: 2rem auto; padding: 0 1.5rem; }
         ul { list-style: none; padding: 0; }
         li { margin-bottom: 1rem; }
@@ -15,11 +16,12 @@
         }
         a.viewer:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12); }
         small { display: block; margin-top: .35rem; color: #475569; }
+        a{color: #fbfbfbff; text-decoration: none;}
     </style>
 </head>
 <body>
 <header>
-    <h1>Documentation API CDC Backoffice</h1>
+    <h1>API Caisse de Dépots et de Consignations</h1>
     <p>Sélectionnez votre viewer préféré.</p>
 </header>
 <main>
@@ -44,5 +46,8 @@
         </li>
     </ul>
 </main>
+<footer>
+    Copyright &copy; {{ date('Y') }} Caisse de Dépots et de Consignations. Tous droits réservés. Développé par Seydou Diallo(<a href="https://github.com/douseyx03" target="_blank">douseyx03</a>).
+</footer>
 </body>
 </html>

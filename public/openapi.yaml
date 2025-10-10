@@ -1,14 +1,14 @@
 openapi: 3.1.0
 info:
-  title: CDC Backoffice API
+  title: API Caisse de Dépots et de Consignations 
   version: 1.0.0
   description: |
     Documentation OpenAPI décrivant l’API d’authentification, de gestion des demandes et du backoffice.
 servers:
-  - url: https://{host}/api
-    variables:
-      host:
-        default: localhost
+  - url: http://127.0.0.1:8000/api
+    # variables:
+    #   host:
+    #     default: localhost
 components:
   securitySchemes:
     BearerToken:
