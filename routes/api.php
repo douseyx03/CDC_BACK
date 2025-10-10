@@ -11,6 +11,7 @@ use App\Http\Controllers\AgentController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 
+//------------------------Authentification/Connexion--------------------------------------------------------------------------
 Route::prefix('auth')->group(function () {
     // Inscription d'un utilisateur avec vérification email/téléphone.
     Route::post('/register', [AuthController::class, 'register']);
@@ -40,6 +41,8 @@ Route::prefix('auth')->group(function () {
 
 
 Route::middleware('auth:sanctum')->group(function () {
+
+    //-------------------Demandes----------------------------------------------------------------------------------------------
     // Liste toutes les demandes accessibles à l'utilisateur connecté ou à l'admin.
     Route::get('/demandes', [DemandeController::class, 'index']);
 
@@ -58,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Supprime définitivement une demande.
     Route::delete('/demandes/{demande}', [DemandeController::class, 'destroy']);
 
+    //------------------Documents-------------------------------------------------------------------------------
     // Liste les documents associés à une demande donnée.
     Route::get('/demandes/{demande}/documents', [DocumentController::class, 'index']);
 
@@ -83,6 +87,7 @@ Route::get('/services/{service}', [ServiceController::class, 'show'])->middlewar
 
 Route::middleware(['auth:sanctum', 'role:super-admin'])->prefix('backoffice')->group(function () {
 
+    //------------------Services--------------------------------------------------------------------------
     // Crée un nouveau service disponible pour les utilisateurs.
     Route::post('/services', [ServiceController::class, 'store']);
 
