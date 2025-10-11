@@ -5,7 +5,7 @@ info:
   description: |
     Documentation OpenAPI décrivant l’API d’authentification, de gestion des demandes et du backoffice.
 
-    Points d’attention récents :
+    Points d’attention :
       - Les rôles attribués aux agents doivent exister avec le guard `sanctum`.
       - Les e-mails (création d’agent, mises à jour de demande) sont envoyés via la file de jobs `database`; assurez-vous qu’un worker tourne (`php artisan queue:work`).
 servers:
