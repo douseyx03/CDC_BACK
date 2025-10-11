@@ -51,6 +51,7 @@
             <li>Les routes de gestion des agents précisent désormais que les rôles doivent exister avec le guard <code>sanctum</code>. Un envoi de chaîne séparée est automatiquement normalisé, et le seeder <code>RolePermissionSeeder</code> alimente les rôles/permissions avec ce guard.</li>
             <li>Les erreurs 422 des viewers exposent la structure de réponse commune (`message` + `errors`).</li>
             <li>Les notifications e-mail (création d’agent, mises à jour de demande) transitent par la queue <code>database</code>. Pensez à lancer <code>php artisan queue:work</code> en local.</li>
+            <li>La documentation couvre désormais les modules Services/Documents (front & backoffice) ainsi que les profils utilisateurs (particulier, entreprise, institution) dans les schémas OpenAPI.</li>
         </ul>
     </section>
 </main>
